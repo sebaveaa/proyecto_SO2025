@@ -44,6 +44,7 @@ void cifrarChunkOptimizado(char* buffer, size_t size);
 void descifrarChunkOptimizado(char* buffer, size_t size);
 void cifrarChunkSIMD(char* buffer, size_t size);
 void descifrarChunkSIMD(char* buffer, size_t size);
+void limpiarArchivosExistentes(int N);
 
 // Función para detectar capacidades SIMD del procesador
 bool tieneCapacidadesSIMD() {
@@ -195,14 +196,6 @@ void descifrarChunkSIMD(char* buffer, size_t size) {
 }
 
 int main() {
-    // Apellidos de los integrantes para el encabezado del programa fuente
-    /*
-    * Integrantes del equipo:
-    * Santiago De Andrade
-    * Sebastian Vera
-    * Samuel Palacios
-    * Daniel Ross
-    */
 
     // Optimización específica de Windows
     optimizarConfiguracionWindows();
@@ -211,6 +204,9 @@ int main() {
 
     // El enunciado indica N = 10 para la entrega y evaluación
     int N = 10;
+
+    // Limpiar archivos existentes antes de empezar
+    limpiarArchivosExistentes(N);
 
     long long tiempoBase = ejecutarProcesoBase(N, originalFileName);
 
@@ -461,11 +457,11 @@ long long ejecutarProcesoBase(int N, const std::string& originalFileName) {
         tiempos_por_archivo.push_back(duration_file.count());
         std::cout << "Tiempo " << std::setw(2) << std::setfill('0') << i << " : " << formatDuration(duration_file.count()) << std::endl;
 
-        // Solo eliminar archivos temporales, mantener los desencriptados para debug
-        remove(copiaFileName.c_str());
-        remove(encriptadoFileName.c_str());
-        remove(hashFileName.c_str());
-        // NO eliminar desencriptadoFileName para poder revisarlo
+        // ARCHIVOS CONSERVADOS - No eliminar para poder inspeccionarlos
+        // remove(copiaFileName.c_str());
+        // remove(encriptadoFileName.c_str());
+        // remove(hashFileName.c_str());
+        // remove(desencriptadoFileName.c_str());  // Este ya no se eliminaba antes
     }
 
     auto tfin_total_chrono = std::chrono::high_resolution_clock::now();
@@ -492,10 +488,6 @@ long long ejecutarProcesoBase(int N, const std::string& originalFileName) {
     return tt_total.count();
 }
 
-// La implementación de ejecutarProcesoOptimizado será similar,
-// pero aquí es donde aplicarás tus estrategias de optimización.
-// Por ejemplo, podrías usar hilos (std::thread) para paralelizar el procesamiento de archivos.
-// Para usar std::thread, necesitarás #include <thread> y quizás un mutex si compartes recursos.
 void ejecutarProcesoOptimizado(int N, const std::string& originalFileName, long long tiempoBase) {
     auto ti_total_chrono = std::chrono::high_resolution_clock::now();
     
@@ -620,9 +612,9 @@ void procesarArchivo(int i, const std::string& originalFileName, std::vector<lon
     }
 
     // Limpiar archivos temporales
-    remove(copiaFileName.c_str());
-    remove(encriptadoFileName.c_str());
-    remove(hashFileName.c_str());
+    // remove(copiaFileName.c_str());
+    // remove(encriptadoFileName.c_str());
+    // remove(hashFileName.c_str());
     // NO eliminar desencriptadoFileName para poder revisarlo
 }
 
@@ -633,4 +625,24 @@ void optimizarConfiguracionWindows() {
     
     // Configurar threads para usar todos los núcleos disponibles
     SetProcessAffinityMask(GetCurrentProcess(), 0xFFFFFFFF);
+}
+
+// Función para limpiar archivos existentes antes de ejecutar
+void limpiarArchivosExistentes(int N) {
+    std::cout << "Limpiando archivos existentes..." << std::endl;
+    
+    for (int i = 1; i <= N; ++i) {
+        std::string copiaFileName = std::to_string(i) + ".txt";
+        std::string encriptadoFileName = std::to_string(i) + ".enc";
+        std::string hashFileName = std::to_string(i) + ".sha";
+        std::string desencriptadoFileName = std::to_string(i) + "2.txt";
+        
+        // Eliminar archivos si existen (no genera error si no existen)
+        remove(copiaFileName.c_str());
+        remove(encriptadoFileName.c_str());
+        remove(hashFileName.c_str());
+        remove(desencriptadoFileName.c_str());
+    }
+    
+    std::cout << "Limpieza completada." << std::endl;
 }
